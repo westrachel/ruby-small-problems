@@ -3,10 +3,10 @@ def request(info)
 end
 
 def valid_to_two_decimals?(amt)
-  if amt.include?(".")
+  if amt.include?(".") && amt != "" && amt.to_i > 0
     amt.to_f.round(2).to_s == amt # ensure user doesn't input a dollar amount with nonsensical decimals 
   else 
-    amt.to_i.to_s == amt 
+    amt.to_i.to_s == amt && amt != "" && amt.to_i > 0
   end
 end
 
