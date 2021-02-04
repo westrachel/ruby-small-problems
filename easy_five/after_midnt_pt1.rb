@@ -47,20 +47,16 @@
 # if the sign variable is positive:
 #          convert the hours & the minutes variables to strings
 #          initialize a new string variable, time_of_day, that is equal to concatenating the hours string, a colon string, and the minutes string together BUT
-#              when concatenate these, need to call additional sub-methods on the hours and minutes within the string interpolation to make sure they're the correct # of digits long
-#          sub-method for the hours variable:
-#                   > if the hour variable isn't the correct number of digits, this will be b/c it's a single digit # and needs to have a 0 appended before the single digit
-#                   > so hour digit checker sub-method should convert the inputted hour integer to a string and append a 0 to the front of it if the inputted hour as a string has a 
-#                        length of 1
-#          sub-method for the minutes variable:
-#                   > if the minutes variable isn't the correct number of digits, this is b/c it's a single digit # and needs to have a 0 appended before the single digit
-#                   > so minute digit checker sub-method should convert the inputted minutes integer to a string and append a 0 to the front of it if the inputted minutes as a string has a 
-#                        length of 1
+#              when concatenate these, need to call additional sub-method on the hours and minutes within the string interpolation to make sure they're the correct # of digits
+#          sub-method for the hours & minutes variables
+#                   > if the hours or minutes variable isn't the correct number of digits, this will be b/c it's a single digit # and needs to have a 0 appended before the single digit
+#                   > so digit checker sub-method should convert the inputted hours or minutes integer to a string and append a 0 to the front of it if the inputted hours
+#                          or minutes as a string has a length of 1
 # if the sign variable is negative:
 #          reassign the hours variable to 23 - the already assigned hours variable to reflect that negative signs correspond w/ times before midnight / work backwards from midnight
 #          reassign the minutes variable to 60 - the already assigned minutes variable to reflect that negative signs correspond w/ times before midnight
 #          initialize a new string variable, time_of_day, that is equal to concatenation of the following:
-#             > return value of the hour digit checker sub-method called on the hours variable + ":" + return value of the minutes digit checker sub-method called on the minutes variable
+#             > return value of the digit checker sub-method called on the hours variable + ":" + return value of the digit checker sub-method called on the minutes variable
 #  return the time_of_day variable at the end of the method
 
 # sub-method to check if integer inputted is more than a day's worth of minutes:
@@ -80,20 +76,13 @@ puts more_than_a_day?(-4231) # returns 1351 as desired
 puts more_than_a_day?(2881) # returns 1 as desired
 puts more_than_a_day?(50) # returns 50 as desired
 
-# additional sub-methods to check if hours and minutes have appropriate number of digits, so that final returned value has 5 digits: hh:mm
-def correct_hr_length?(hr)
-  if hr.to_s.length == 1
-    hr = "0" + hr.to_s
+# additional sub-methods to check if hours and minutes have appropriate number of digits,
+# so that final returned value has 5 digits: hh:mm
+def correct_length?(hrs_or_mins)
+  if hrs_or_mins.to_s.length == 1
+    hrs_or_mins = "0" + hrs_or_mins.to_s
   else
-    hr = hr.to_s
-  end
-end
-
-def correct_mins_length?(minutes)
-  if minutes.to_s.length == 1
-    minutes = "0" + minutes.to_s
-  else
-    minutes = minutes.to_s
+    hrs_or_mins = hrs_or_mins.to_s
   end
 end
 
@@ -104,11 +93,11 @@ def time_of_day(num)
   hours = prepped_num / 60
   minutes = prepped_num % 60 
   if sign == 1
-    time_of_day = "#{correct_hr_length?(hours)}:#{correct_mins_length?(minutes)}"
+    time_of_day = "#{correct_length?(hours)}:#{correct_length?(minutes)}"
   else
     hours = 23 - hours
     minutes = 60 - minutes
-    time_of_day = "#{correct_hr_length?(hours)}:#{correct_mins_length?(minutes)}"
+    time_of_day = "#{correct_length?(hours)}:#{correct_length?(minutes)}"
   end
   time_of_day
 end
