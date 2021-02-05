@@ -17,9 +17,30 @@
 #      > each element of the returned array from this method call will contain one of the words of the inputted string
 #            <=> example tested in irb to confirm: "Oh what a wonderful".split returns the array:
 #                      => ["Oh", "what", "a", "wonderful"]
-# initialize a new array variable called reverse_first_last_letters_of_each_wd that is assigned to the value of the 
+# initialize a new array variable called reversed_letters_arr that is assigned to the return array value of the 
 #          each method called on inputted string#split
-#                 <=> use the each method to iterate over the array and reverse each word element of the array 
-#                        after reversing, save the characters at the 0th and last index of the each word element
-# will finish this algorithm later!
-#                                    
+#                 <=> use the each method to iterate over the array and:
+#                    reassign the first and last character of the word through string indexing:
+#                             last_char = element[element.length-1]  
+#                                  <=> since indices start at 0, the last index of each element equals that element's length minus 1
+#                             first_char = element[0]
+#                             element[0] = last_char
+#                             element[element.length-1] = first_char
+# call the Array#join method w/ the argument " "  passed into join() on the reversed_letters_arr so that the last thing returned by 
+#        the method is a String containing each word of the originally inputted string w/ the first and last letters reversed 
+#            <=> passing " " into the join method call will ensure that the words in the string are separated by spaces
+
+def swap(str)
+  reversed_letters_arr = str.split.each do |element|
+    last_char = element[element.length-1]
+    first_char = element[0]
+    element[0] = last_char
+    element[element.length-1] = first_char
+  end
+  reversed_letters_arr.join(" ")
+end
+
+# check work: all of the below should (& do) print as true
+puts swap('Oh what a wonderful day it is') == 'hO thaw a londerfuw yad ti si'
+puts swap('Abcde') == 'ebcdA'
+puts swap('a') == 'a'
