@@ -8,14 +8,30 @@ WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9]] + # row winning lines
                 [[1, 4, 7], [2, 5, 8], [3, 6, 9]] + # column winning lines
                 [[1, 5, 9], [3, 5, 7]]              # diagonal winning lines
 
+FIRST_MOVER_OPTIONS = ['Player', 'Computer', 'Choose']
+
 def prompt(msg)
   puts "=> #{msg}"
 end
 
+def new_line_display
+  puts ""
+end
+
+def user_choice_corrected_if_necessary(user_selected)
+  if user_selected == 1 || user_selected == 2
+    user_selected
+  else
+    prompt "Invalid selection. Random player will be selected to go first."
+    user_selected = FIRST_MOVER_OPTIONS[0, 2].sample
+    user_selected
+  end
+end
+
 # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
 def display_board(brd)
-  #system 'clear'
-  puts "You're a #{PLAYER_MARKER}. Computer is #{COMPUTER_MARKER}."
+  # system 'clear'
+  puts "You're an #{PLAYER_MARKER}. Computer is #{COMPUTER_MARKER}."
   puts ""
   puts "     |     |"
   puts "  #{brd[1]}  |  #{brd[2]}  |  #{brd[3]}"
@@ -88,23 +104,41 @@ def detect_winner(brd)
 end
 
 def comps_defense_position(brd)
-  relevant_line = WINNING_LINES.select do |line|
+  threatening_line = WINNING_LINES.select do |line|
     brd.values_at(*line).count(PLAYER_MARKER) == 2 && brd.values_at(*line).count(INITIAL_MARKER) == 1
   end
-  defense_position_arr = relevant_line.flatten.select do |key|
+  defense_position_arr = threatening_line.flatten.select do |key|
     brd[key] == INITIAL_MARKER
   end
   defense_position_arr[0] # based on the filtering, defense_position_arr will contain 1 element at most
-  # specifically, the element will be the key associated w/ the position the computer should play
-  # to play strong defense and prevent the player from easily getting 3 in a row
+  # specifically, the element will be the key associated w/ the position containing the INITIAL_MARKER
+  # that the the computer should play to play strong defense and prevent the player from easily getting 3 in a row
   # or it will return nil if relevant_line.flatten returns an empty array
 end
 
+def comps_offense_position(brd)
+  offensive_line = WINNING_LINES.select do |line|
+    brd.values_at(*line).count(COMPUTER_MARKER) == 2 && brd.values_at(*line).count(INITIAL_MARKER) == 1
+  end
+  offensive_position_arr = offensive_line.flatten.select do |key|
+    brd[key] == INITIAL_MARKER
+  end
+  offensive_position_arr[0]
+end
+
+# current order of computer's position strategy:
+# play offense first, defense second, 
+# pick square 5 if it's available as the third strategy,
+# and then pick a random empty square
 def computer_places_piece!(brd)
-  if comps_defense_position(brd).nil?
-    square = empty_squares(brd).sample
-  else
+  if comps_offense_position(brd).nil? == false
+    square = comps_offense_position(brd)
+  elsif comps_defense_position(brd).nil? == false
     square = comps_defense_position(brd)
+  elsif brd[5] == INITIAL_MARKER
+    square = 5
+  else
+    square = empty_squares(brd).sample
   end
   brd[square] = COMPUTER_MARKER
 end
@@ -112,10 +146,23 @@ end
 num_player_wins = 0
 num_computer_wins = 0
 
+new_line_display
+select_first_mover = FIRST_MOVER_OPTIONS.sample
+
+if select_first_mover == 'Player' || select_first_mover == 'Computer'
+    prompt "#{select_first_mover} was selected to go first!"
+else
+    prompt "Enter 1 to go first or 2 for the computer to go first."
+    user_selection = gets.chomp.to_i
+    select_first_mover = FIRST_MOVER_OPTIONS[user_choice_corrected_if_necessary(user_selection)-1]
+    # binding.pry
+    prompt "#{select_first_mover} was selected to go first!"
+end
+
 loop do
   board = initialize_board
 
-  loop do
+  while select_first_mover == 'Player'
     display_board(board)
     player_places_piece!(board)
     break if someone_won?(board) || board_full?(board)
@@ -123,6 +170,16 @@ loop do
     # binding.pry
 
     computer_places_piece!(board)
+    break if someone_won?(board) || board_full?(board)
+  end
+  
+  while select_first_mover == 'Computer'
+    computer_places_piece!(board)
+    break if someone_won?(board) || board_full?(board)
+    
+    display_board(board)
+    
+    player_places_piece!(board)
     break if someone_won?(board) || board_full?(board)
   end
 
