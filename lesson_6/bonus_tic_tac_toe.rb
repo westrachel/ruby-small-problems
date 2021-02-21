@@ -18,14 +18,12 @@ def new_line_display
   puts ""
 end
 
-def user_choice_corrected_if_necessary(user_selected)
-  if user_selected == 1 || user_selected == 2
-    user_selected
-  else
+def correct_if_needed(choice)
+  if choice != 1 && choice != 2
     prompt "Invalid selection. Random player will be selected to go first."
-    user_selected = FIRST_MOVER_OPTIONS[0, 2].sample
-    user_selected
+    choice = FIRST_MOVER_OPTIONS[0, 2].sample
   end
+  choice
 end
 
 # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
@@ -83,7 +81,6 @@ def player_places_piece!(brd)
   brd[square] = PLAYER_MARKER
 end
 
-
 def board_full?(brd)
   empty_squares(brd).empty?
 end
@@ -105,20 +102,25 @@ end
 
 def comps_defense_position(brd)
   threatening_line = WINNING_LINES.select do |line|
-    brd.values_at(*line).count(PLAYER_MARKER) == 2 && brd.values_at(*line).count(INITIAL_MARKER) == 1
+    brd.values_at(*line).count(PLAYER_MARKER) == 2 &&
+      brd.values_at(*line).count(INITIAL_MARKER) == 1
   end
   defense_position_arr = threatening_line.flatten.select do |key|
     brd[key] == INITIAL_MARKER
   end
-  defense_position_arr[0] # based on the filtering, defense_position_arr will contain 1 element at most
-  # specifically, the element will be the key associated w/ the position containing the INITIAL_MARKER
-  # that the the computer should play to play strong defense and prevent the player from easily getting 3 in a row
+  defense_position_arr[0]
+  # Based on the filtering, defense_position_arr will contain 1
+  # element at most. Specifically, the element will be the key
+  # associated w/ the position containing the INITIAL_MARKER
+  # that the the computer should play to play strong defense
+  # and prevent the player from easily getting 3 in a row
   # or it will return nil if relevant_line.flatten returns an empty array
 end
 
 def comps_offense_position(brd)
   offensive_line = WINNING_LINES.select do |line|
-    brd.values_at(*line).count(COMPUTER_MARKER) == 2 && brd.values_at(*line).count(INITIAL_MARKER) == 1
+    brd.values_at(*line).count(COMPUTER_MARKER) == 2 &&
+      brd.values_at(*line).count(INITIAL_MARKER) == 1
   end
   offensive_position_arr = offensive_line.flatten.select do |key|
     brd[key] == INITIAL_MARKER
@@ -127,19 +129,21 @@ def comps_offense_position(brd)
 end
 
 # current order of computer's position strategy:
-# play offense first, defense second, 
+# play offense first, defense second,
 # pick square 5 if it's available as the third strategy,
 # and then pick a random empty square
 def computer_places_piece!(brd)
-  if comps_offense_position(brd).nil? == false
-    square = comps_offense_position(brd)
-  elsif comps_defense_position(brd).nil? == false
-    square = comps_defense_position(brd)
-  elsif brd[5] == INITIAL_MARKER
-    square = 5
-  else
-    square = empty_squares(brd).sample
-  end
+  square = if comps_offense_position(brd)
+             # next line assigns square to offense position as long
+             # as comps_offense_position isn't nil
+             comps_offense_position(brd)
+           elsif comps_defense_position(brd)
+             comps_defense_position(brd)
+           elsif brd[5] == INITIAL_MARKER
+             5
+           else
+             empty_squares(brd).sample
+           end
   brd[square] = COMPUTER_MARKER
 end
 
@@ -149,15 +153,14 @@ num_computer_wins = 0
 new_line_display
 select_first_mover = FIRST_MOVER_OPTIONS.sample
 
-if select_first_mover == 'Player' || select_first_mover == 'Computer'
-    prompt "#{select_first_mover} was selected to go first!"
-else
-    prompt "Enter 1 to go first or 2 for the computer to go first."
-    user_selection = gets.chomp.to_i
-    select_first_mover = FIRST_MOVER_OPTIONS[user_choice_corrected_if_necessary(user_selection)-1]
-    # binding.pry
-    prompt "#{select_first_mover} was selected to go first!"
+if select_first_mover == 'Choose'
+  prompt "Enter 1 to go first or 2 for the computer to go first."
+  user_choice = gets.chomp.to_i
+  select_first_mover = FIRST_MOVER_OPTIONS[correct_if_needed(user_choice) - 1]
+  # binding.pry
 end
+
+prompt "#{select_first_mover} was selected to go first!"
 
 loop do
   board = initialize_board
@@ -166,19 +169,19 @@ loop do
     display_board(board)
     player_places_piece!(board)
     break if someone_won?(board) || board_full?(board)
-    
+
     # binding.pry
 
     computer_places_piece!(board)
     break if someone_won?(board) || board_full?(board)
   end
-  
+
   while select_first_mover == 'Computer'
     computer_places_piece!(board)
     break if someone_won?(board) || board_full?(board)
-    
+
     display_board(board)
-    
+
     player_places_piece!(board)
     break if someone_won?(board) || board_full?(board)
   end
@@ -199,9 +202,9 @@ loop do
 
   prompt "Current Score:"
   prompt "Player = #{num_player_wins} vs Computer = #{num_computer_wins}"
-  
+
   break if num_player_wins == 5 || num_computer_wins == 5
-  
+
   prompt "Play again? (y or n)"
   answer = gets.chomp
   break unless answer.downcase.start_with?('y')
