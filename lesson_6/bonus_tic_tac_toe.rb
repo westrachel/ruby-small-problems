@@ -14,7 +14,7 @@ end
 
 # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
 def display_board(brd)
-  system 'clear'
+  #system 'clear'
   puts "You're a #{PLAYER_MARKER}. Computer is #{COMPUTER_MARKER}."
   puts ""
   puts "     |     |"
@@ -43,14 +43,23 @@ def initialize_board
 end
 
 def empty_squares(brd)
-  # binding.pry
   brd.keys.select { |num| brd[num] == INITIAL_MARKER }
+end
+
+def joinor(array_input, delimiter, word_delimeter)
+  last_arr_item = array_input.pop
+  arr_separated = array_input.join(delimiter)
+  if arr_separated.empty? == false
+    puts arr_separated + delimiter + word_delimeter + last_arr_item.to_s
+  else
+    puts last_arr_item.to_s
+  end
 end
 
 def player_places_piece!(brd)
   square = ''
   loop do
-    prompt "Choose a square (#{empty_squares(brd).join(', ')}):"
+    prompt "Choose a square: #{joinor(empty_squares(brd), ', ', 'or ')}"
     square = gets.chomp.to_i
     break if empty_squares(brd).include?(square)
     prompt "Sorry, that's not a valid choice."
@@ -58,10 +67,6 @@ def player_places_piece!(brd)
   brd[square] = PLAYER_MARKER
 end
 
-def computer_places_piece!(brd)
-  square = empty_squares(brd).sample
-  brd[square] = COMPUTER_MARKER
-end
 
 def board_full?(brd)
   empty_squares(brd).empty?
@@ -73,20 +78,6 @@ end
 
 def detect_winner(brd)
   WINNING_LINES.each do |line|
-    #  if brd[line[0]] == PLAYER_MARKER &&
-    #     brd[line[1]] == PLAYER_MARKER &&
-    #     brd[line[2]] == PLAYER_MARKER
-    #    return 'Player'
-    #  elsif brd[line[0]] == COMPUTER_MARKER &&
-    #        brd[line[1]] == COMPUTER_MARKER &&
-    #        brd[line[2]] == COMPUTER_MARKER
-    #    return 'Computer'
-    #  end
-    #  if brd.values_at(line[0], line[1], line[2]).count(PLAYER_MARKER) == 3
-    #    return 'Player'
-    #  elsif brd.values_at(line[0], line[1], line[2]).count(COMPUTER_MARKER) == 3
-    #    return 'Computer'
-    #end
     if brd.values_at(*line).count(PLAYER_MARKER) == 3
       return 'Player'
     elsif brd.values_at(*line).count(COMPUTER_MARKER) == 3
@@ -96,16 +87,40 @@ def detect_winner(brd)
   nil
 end
 
+def comps_defense_position(brd)
+  relevant_line = WINNING_LINES.select do |line|
+    brd.values_at(*line).count(PLAYER_MARKER) == 2 && brd.values_at(*line).count(INITIAL_MARKER) == 1
+  end
+  defense_position_arr = relevant_line.flatten.select do |key|
+    brd[key] == INITIAL_MARKER
+  end
+  defense_position_arr[0] # based on the filtering, defense_position_arr will contain 1 element at most
+  # specifically, the element will be the key associated w/ the position the computer should play
+  # to play strong defense and prevent the player from easily getting 3 in a row
+  # or it will return nil if relevant_line.flatten returns an empty array
+end
+
+def computer_places_piece!(brd)
+  if comps_defense_position(brd).nil?
+    square = empty_squares(brd).sample
+  else
+    square = comps_defense_position(brd)
+  end
+  brd[square] = COMPUTER_MARKER
+end
+
+num_player_wins = 0
+num_computer_wins = 0
+
 loop do
   board = initialize_board
-  # display_board(board)
-  # puts board.inspect
-  # can see board = mutated permanently after user inputs a number
 
   loop do
     display_board(board)
     player_places_piece!(board)
     break if someone_won?(board) || board_full?(board)
+    
+    # binding.pry
 
     computer_places_piece!(board)
     break if someone_won?(board) || board_full?(board)
@@ -115,13 +130,27 @@ loop do
 
   if someone_won?(board)
     prompt "#{detect_winner(board)} won!"
+    case detect_winner(board)
+    when 'Player'
+      num_player_wins += 1
+    when 'Computer'
+      num_computer_wins += 1
+    end
   else
     prompt "It's a tie!"
   end
 
+  prompt "Current Score:"
+  prompt "Player = #{num_player_wins} vs Computer = #{num_computer_wins}"
+  
+  break if num_player_wins == 5 || num_computer_wins == 5
+  
   prompt "Play again? (y or n)"
   answer = gets.chomp
   break unless answer.downcase.start_with?('y')
 end
+
+prompt "Final Score:"
+prompt "Player = #{num_player_wins} vs Computer = #{num_computer_wins}"
 
 prompt "Thanks for playing Tic Tac Toe. Bye for now!"
