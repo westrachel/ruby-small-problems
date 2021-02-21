@@ -4,9 +4,11 @@ INITIAL_MARKER = ' '
 PLAYER_MARKER = 'X'
 COMPUTER_MARKER = 'O'
 
-WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9]] + # row winning lines
-                [[1, 4, 7], [2, 5, 8], [3, 6, 9]] + # column winning lines
-                [[1, 5, 9], [3, 5, 7]]              # diagonal winning lines
+WINNING_LINES = [[1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [11, 12, 13, 14, 15],
+                 [16, 17, 18, 19, 20], [21, 22, 23, 24, 25]] +
+                [[1, 6, 11, 16, 21], [2, 7, 12, 17, 22], [3, 8, 13, 18, 23],
+                 [4, 9, 14, 19, 24], [5, 10, 15, 20, 25]] +
+                [[1, 7, 13, 19, 25], [5, 9, 13, 17, 21]]
 
 FIRST_MOVER_OPTIONS = ['Player', 'Computer', 'Choose']
 
@@ -31,20 +33,30 @@ def display_board(brd)
   # system 'clear'
   puts "You're an #{PLAYER_MARKER}. Computer is #{COMPUTER_MARKER}."
   puts ""
-  puts "     |     |"
-  puts "  #{brd[1]}  |  #{brd[2]}  |  #{brd[3]}"
-  puts "     |     |"
-  puts "     |     |"
-  puts "_____+_____+_____"
-  puts "     |     |"
-  puts "     |     |"
-  puts "  #{brd[4]}  |  #{brd[5]}  |  #{brd[6]}"
-  puts "     |     |"
-  puts "_____+_____+_____"
-  puts "     |     |"
-  puts "     |     |"
-  puts "  #{brd[7]}  |  #{brd[8]}  |  #{brd[9]}"
-  puts "     |     |"
+  puts "     |     |     |     |"
+  puts "  #{brd[1]}  |  #{brd[2]}  |  #{brd[3]}  |  #{brd[4]}  |  #{brd[5]}"
+  puts "     |     |     |     |"
+  puts "     |     |     |     |"
+  puts "_____+_____+_____+_____+_____"
+  puts "     |     |     |     |"
+  puts "  #{brd[6]}  |  #{brd[7]}  |  #{brd[8]}  |  #{brd[9]}  |  #{brd[10]}"
+  puts "     |     |     |     |"
+  puts "     |     |     |     |"
+  puts "_____+_____+_____+_____+_____"
+  puts "     |     |     |     |"
+  puts "  #{brd[11]}  |  #{brd[12]}  |  #{brd[13]}  |  #{brd[14]}  |  #{brd[15]}"
+  puts "     |     |     |     |"
+  puts "     |     |     |     |"
+  puts "_____+_____+_____+_____+_____"
+  puts "     |     |     |     |"
+  puts "  #{brd[16]}  |  #{brd[17]}  |  #{brd[18]}  |  #{brd[19]}  |  #{brd[20]}"
+  puts "     |     |     |     |"
+  puts "     |     |     |     |"
+  puts "_____+_____+_____+_____+_____"
+  puts "     |     |     |     |"
+  puts "  #{brd[21]}  |  #{brd[22]}  |  #{brd[23]}  |  #{brd[24]}  |  #{brd[25]}"
+  puts "     |     |     |     |"
+  puts "     |     |     |     |"
   puts ""
 end
 
@@ -52,7 +64,7 @@ end
 
 def initialize_board
   new_board = {}
-  (1..9).each { |num| new_board[num] = INITIAL_MARKER }
+  (1..25).each { |num| new_board[num] = INITIAL_MARKER }
   new_board
 end
 
@@ -92,9 +104,9 @@ end
 
 def detect_winner(brd)
   WINNING_LINES.each do |line|
-    if brd.values_at(*line).count(PLAYER_MARKER) == 3
+    if brd.values_at(*line).count(PLAYER_MARKER) == 5
       return 'Player'
-    elsif brd.values_at(*line).count(COMPUTER_MARKER) == 3
+    elsif brd.values_at(*line).count(COMPUTER_MARKER) == 5
       return 'Computer'
     end
   end
@@ -103,7 +115,7 @@ end
 
 def comps_defense_position(brd)
   threatening_line = WINNING_LINES.select do |line|
-    brd.values_at(*line).count(PLAYER_MARKER) == 2 &&
+    brd.values_at(*line).count(PLAYER_MARKER) == 4 &&
       brd.values_at(*line).count(INITIAL_MARKER) == 1
   end
   defense_position_arr = threatening_line.flatten.select do |key|
@@ -120,7 +132,7 @@ end
 
 def comps_offense_position(brd)
   offensive_line = WINNING_LINES.select do |line|
-    brd.values_at(*line).count(COMPUTER_MARKER) == 2 &&
+    brd.values_at(*line).count(COMPUTER_MARKER) == 4 &&
       brd.values_at(*line).count(INITIAL_MARKER) == 1
   end
   offensive_position_arr = offensive_line.flatten.select do |key|
@@ -131,7 +143,7 @@ end
 
 # current order of computer's position strategy:
 # play offense first, defense second,
-# pick square 5 if it's available as the third strategy,
+# pick square 13 if it's available as the third strategy,
 # and then pick a random empty square
 def computer_places_piece!(brd)
   square = if comps_offense_position(brd)
@@ -140,8 +152,8 @@ def computer_places_piece!(brd)
              comps_offense_position(brd)
            elsif comps_defense_position(brd)
              comps_defense_position(brd)
-           elsif brd[5] == INITIAL_MARKER
-             5
+           elsif brd[13] == INITIAL_MARKER
+             13
            else
              empty_squares(brd).sample
            end
