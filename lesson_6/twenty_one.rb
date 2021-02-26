@@ -35,22 +35,57 @@ def card_suit(participants_cards, card_idx)
   participants_cards[card_idx].keys[0]
 end
 
-def contains_aces?(participants_cards)
-  participants_cards.any? do |card_sub_hash|
-    card_sub_hash.values[0].keys[0] == "ace"
+def number_of_aces(participants_cards)
+  ace_arr = participants_cards.map do |suit_card_sub_hash|
+    suit_card_sub_hash.values[0].include?("ace")
+  end # this map will return new array w/ booleans; boolean = true if card is an "ace"
+  ace_arr.count("true") # number of aces
+end
+
+def remove_aces(participants_cards)
+  participants_cards.select do |suit_card_sub_hash|
+    suit_card_sub_hash.values[0].include?("ace") == false
   end
 end
 
-def extract_card_values(participants_cards)
+# basic value extraction method; if there are aces, need another method definition
+# for the case where there are aces
+# I don't think I need the following method anymore post adding calc_total() method
+def extract_values_no_ace_case(participants_cards)
   participants_cards.map do |card_sub_hash|
     card_sub_hash.values[0].values
   end
 end
 
-def busted?(participants_cards)
-  if contains_aces?(participants_cards) == false
-    true if (extract_card_values(participants_cards).flatten.inject {|sum, x| sum + x}) > 21
+# Possible cases to account for when calculating the total value of a player's hand:
+# Since aces are worth 11 points there will never be a case where a player will add more than 1 ace worth 11 points
+# b/c 11 + 11 = 22 > 21 = bust and automatic loss situation
+# Accordingly, the program should add to the sub-total most 1 ace worth 11 points and if there are
+def calc_total(participants_cards)
+  num_aces = number_of_aces(participants_cards)
+  sub_total_no_aces = extract_values_no_ace_case(remove_aces(participants_cards)).flatten.inject {|sum, x| sum + x}
+  # sub_total_no_aces will be nil if the player's hand contains only aces
+  if sub_total_no_aces == nil
+    total = 11 + (num_aces - 1)*1
+  elsif ((21 - sub_total_no_aces) >= 11) && num_aces >= 1
+    total = sub_total_no_aces + 11 + (num_aces - 1)*1
+  elsif ((21 - sub_total_no_aces) < 11) && num_aces >= 1
+    total = sub_total_no_aces + num_aces
+    # above formula assigns all instances of aces to the value of 1
+    # to try to avoid having the player bust
+  else # remaining situtation to account for is case where num_aces = 0
+    total = sub_total_no_aces
   end
+  total
+end
+
+
+
+def busted?(participants_cards)
+  true if calc_total(participants_cards) > 21
+end
+
+def declare_winner(plyr1_cards, plyr2_cars)
 end
 
 # initialize the deck
@@ -92,14 +127,14 @@ loop do
   prompt "Enter hit or stay"
   choice = gets.chomp
   break if choice == "stay" || busted?(players_cards)
+  deal_card!(players_cards, deck)
+  prompt "Your hand's current total is: #{calc_total(players_cards)}"
+  # prompt "#{extract_values_no_ace_case(players_cards).inject {|sum, x| sum + x}} "
 end
+
+p players_cards
 
 if busted?(players_cards)
-  prompt "You've been busted! Your hand's total is:"
-  prompt "#{extract_card_values(participants_cards).inject {|sum, x| sum + x}} "
+  prompt "You've been busted! Your hand's total is: #{calc_total(players_cards)}"
+  # prompt "#{extract_values_no_ace_case(players_cards).inject {|sum, x| sum + x}} "
 end
-
-# check basic summation of cards
-# note: will need to update method to handle the fact that aces can have different values
-# in different situations
-p extract_card_values(players_cards).flatten.inject {|sum, x| sum + x}
