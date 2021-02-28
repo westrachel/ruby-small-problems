@@ -1,7 +1,5 @@
 require 'pry'
 
-PLAYERS = ['Player', 'Dealer']
-
 def prompt(msg)
   puts "=> #{msg}"
 end
@@ -14,8 +12,8 @@ def new_line
   puts ""
 end
 
-suits = %w(Hearts Clubs Spades Diamonds)
-possible_cards = [{ "Two" => 2 }, { "Three" => 3 }, { "Four" => 4 },
+SUITS = %w(Hearts Clubs Spades Diamonds)
+POSSIBLE_CARDS = [{ "Two" => 2 }, { "Three" => 3 }, { "Four" => 4 },
                   { "Five" => 5 }, { "Six" => 6 }, { "Seven" => 7 },
                   { "Eight" => 8 }, { "Nine" => 9 }, { "Ten" => 10 },
                   { "Jack" => 10 }, { "Queen" => 10 }, { "King" => 10 },
@@ -129,7 +127,7 @@ end
 # initialize the deck
 loop do
   while possible_cards_idx < 13
-    deck.push({ suits[suits_idx] => possible_cards[possible_cards_idx] })
+    deck.push({ SUITS[suits_idx] => POSSIBLE_CARDS[possible_cards_idx] })
     possible_cards_idx += 1
   end
 
