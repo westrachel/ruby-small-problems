@@ -6,14 +6,20 @@ def prompt(msg)
   puts "=> #{msg}"
 end
 
+def list(msg)
+  puts "    > #{msg}"
+end
+
 def new_line
   puts ""
 end
 
-suits = %w(hearts clubs spades diamonds)
-possible_cards = [{"two" => 2}, {"three" => 3}, {"four" => 4}, {"five" => 5},
-                  {"six" => 6}, {"seven" => 7}, {"eight" => 8}, {"nine" => 9},
-                  {"ten" => 10}, {"jack" => 10}, {"queen" => 10}, {"king" => 10}, {"ace" => [1, 11]}]
+suits = %w(Hearts Clubs Spades Diamonds)
+possible_cards = [{ "Two" => 2 }, { "Three" => 3 }, { "Four" => 4 },
+                  { "Five" => 5 }, { "Six" => 6 }, { "Seven" => 7 },
+                  { "Eight" => 8 }, { "Nine" => 9 }, { "Ten" => 10 },
+                  { "Jack" => 10 }, { "Queen" => 10 }, { "King" => 10 },
+                  { "Ace" => [1, 11] }]
 deck = []
 suits_idx = 0
 possible_cards_idx = 0
@@ -21,120 +27,185 @@ possible_cards_idx = 0
 players_cards = []
 dealers_cards = []
 
-def deal_card!(participants_cards, current_deck)
+def deal_card!(hand, current_deck)
   random_card = current_deck.sample
-  participants_cards.push(random_card)
+  hand.push(random_card)
   current_deck.delete_if { |card| card == random_card }
 end
 
-def card_value(participants_cards, card_idx)
-  participants_cards[card_idx].values[0].values[0]
+def card_value_key(hand, card_idx)
+  hand[card_idx].values[0].keys[0]
 end
 
-def card_suit(participants_cards, card_idx)
-  participants_cards[card_idx].keys[0]
+def card_suit(hand, card_idx)
+  hand[card_idx].keys[0]
 end
 
-def number_of_aces(participants_cards)
-  ace_arr = participants_cards.map do |suit_card_sub_hash|
-    suit_card_sub_hash.values[0].include?("ace")
-  end # this map will return new array w/ booleans; boolean = true if card is an "ace"
-  ace_arr.count("true") # number of aces
+def number_of_aces(hand)
+  ace_arr = hand.map do |suit_card_sub_hash|
+    suit_card_sub_hash.values[0].include?("Ace")
+  end # this map will return new array w/ booleans
+  # the boolean = true if card is an "ace"
+  ace_arr.count(true) # number of aces
 end
 
-def remove_aces(participants_cards)
-  participants_cards.select do |suit_card_sub_hash|
-    suit_card_sub_hash.values[0].include?("ace") == false
-  end
-end
-
-# basic value extraction method; if there are aces, need another method definition
-# for the case where there are aces
-# I don't think I need the following method anymore post adding calc_total() method
-def extract_values_no_ace_case(participants_cards)
-  participants_cards.map do |card_sub_hash|
+def numeric_card_vals(hand)
+  hand.map do |card_sub_hash|
     card_sub_hash.values[0].values
   end
 end
 
-# Possible cases to account for when calculating the total value of a player's hand:
-# Since aces are worth 11 points there will never be a case where a player will add more than 1 ace worth 11 points
-# b/c 11 + 11 = 22 > 21 = bust and automatic loss situation
-# Accordingly, the program should add to the sub-total most 1 ace worth 11 points and if there are
-def calc_total(participants_cards)
-  num_aces = number_of_aces(participants_cards)
-  sub_total_no_aces = extract_values_no_ace_case(remove_aces(participants_cards)).flatten.inject {|sum, x| sum + x}
-  # sub_total_no_aces will be nil if the player's hand contains only aces
-  if sub_total_no_aces == nil
-    total = 11 + (num_aces - 1)*1
-  elsif ((21 - sub_total_no_aces) >= 11) && num_aces >= 1
-    total = sub_total_no_aces + 11 + (num_aces - 1)*1
-  elsif ((21 - sub_total_no_aces) < 11) && num_aces >= 1
-    total = sub_total_no_aces + num_aces
-    # above formula assigns all instances of aces to the value of 1
-    # to try to avoid having the player bust
-  else # remaining situtation to account for is case where num_aces = 0
-    total = sub_total_no_aces
+def calc_total(hand)
+  numeric_card_vals(hand).flatten.inject { |sum, x| sum + x }
+end
+
+# ignoring the rubocop message that line 64 is too long
+def calc_total_exclude_aces(hand)
+  numeric_card_vals(remove_multivalue_aces(hand)).flatten.inject { |sum, x| sum + x }
+end
+
+def remove_multivalue_aces(hand)
+  hand.select do |suit_card_sub_hash|
+    suit_card_sub_hash.values[0] != { "Ace" => [1, 11] }
   end
-  total
 end
 
-
-
-def busted?(participants_cards)
-  true if calc_total(participants_cards) > 21
+# Assign generic "Suit" key to the replacement Ace cards
+#      i. I don't care to display final cards' suits &
+#      ii. This doesn't impede gameplay functionality
+# Could build out additional methodology to have the
+# replacement ace's suit be the correct suit
+# For the initial deals, there are several cases to account for:
+#      i. player receive 2 aces
+#     ii. player receives 1 ace and a non-ace
+#     iii. player receives no aces
+# What program needs to do for each situation given other
+#              existing method definitions:
+#      i. remove the 2 aces from the initial hand and add one ace
+#            w/ value of 11 and 1 ace w/ value of 1
+#      ii. remove the ace & add 1 ace w/ value = 11 b/c max value initial
+#           hand can have excluding aces is 10
+#      iii. nothing particular needs to be done b/c
+#                 non-ace cards have straightforward values
+def mutate_aces_in_initial_hand(hand)
+  if number_of_aces(hand) == 2
+    hand = remove_multivalue_aces(hand)
+    hand.push({ "Suit" => { "Ace" => 11 } }).push({ "Suit" => { "Ace" => 1 } })
+  elsif number_of_aces(hand) == 1
+    hand = remove_multivalue_aces(hand).push({ "Suit" => { "Ace" => 11 } })
+  end
+  hand
 end
 
-def declare_winner(plyr1_cards, plyr2_cars)
+def mutate_added_ace(hand)
+  if calc_total_exclude_aces(hand) <= 10
+    hand = remove_multivalue_aces(hand).push({ "Suit" => { "Ace" => 11 } })
+  elsif calc_total_exclude_aces(hand) > 10
+    hand = remove_multivalue_aces(hand).push({ "Suit" => { "Ace" => 1 } })
+  end
+  hand
+end
+
+# return value of busted?(participants_cards) is nil
+# if the total hand value of that player's hand is <= 21
+def busted?(hand)
+  true if calc_total(hand) > 21
+end
+
+# the following method will not declare the correct winner if someone has busted
+# for example, if player's card total == 22 and dealer's card total == 18
+# then the following method would state that the player won
+# b/c 21 - 22 = -1, which is less than 21 - 18
+def declare_winner_if_no_busts(plyr_hand, dealer_hand)
+  if (21 - calc_total(plyr_hand)) == (21 - calc_total(dealer_hand))
+    prompt "It's a tie!"
+  elsif (21 - calc_total(plyr_hand)) < (21 - calc_total(dealer_hand))
+    prompt "You won!"
+  else
+    prompt "The Dealer won!"
+  end
 end
 
 # initialize the deck
 loop do
-
   while possible_cards_idx < 13
-    deck.push({suits[suits_idx]=> possible_cards[possible_cards_idx]})
+    deck.push({ suits[suits_idx] => possible_cards[possible_cards_idx] })
     possible_cards_idx += 1
   end
-  
+
   possible_cards_idx -= 13
   suits_idx += 1
-  
-  break if suits_idx == 4
 
+  break if suits_idx == 4
 end
 
 # check deck initialization
-p deck
-puts deck.size # should be 52 unique card + suit combos
-p deck.sample
+# p deck
+# puts deck.size # should be 52 unique card + suit combos
+# p deck.sample
 
 # deal cards
-2.times { |counter| deal_card!(players_cards, deck) }
-2.times { |counter| deal_card!(dealers_cards, deck) }
+2.times { deal_card!(players_cards, deck) }
+2.times { deal_card!(dealers_cards, deck) }
+# for testing ace cases:
+# players_cards = [{"Spades"=>{"Ace"=>[1, 11]}}, {"Hearts"=>{"Ace"=>[1, 11]}}]
+# dealers_cards = [{"Diamonds"=>{"Ace"=>[1, 11]}}, {"Clubs"=>{"Ace"=>[1, 11]}}]
 
 # print welcome messages and starting hands of the different players
 # the player will only see the dealer's first card
 prompt "Welcome to the game of 21! The initial cards have been delt."
-prompt "The dealer has:"
-prompt "   #{card_value(dealers_cards, 0)} of " + card_suit(dealers_cards, 0) + " and an unknown card."
+prompt "The Dealer has:"
+list "#{card_value_key(dealers_cards, 0)} of " + card_suit(dealers_cards, 0)
+list "Unknown card"
 new_line
 prompt "You have:"
-prompt "   #{card_value(players_cards, 0)} of " + card_suit(players_cards, 0) + " and #{card_value(players_cards, 1)} of " + card_suit(players_cards, 0) + "." 
+list "#{card_value_key(players_cards, 0)} of " + card_suit(players_cards, 0)
+list "#{card_value_key(players_cards, 1)} of " + card_suit(players_cards, 0)
+
+players_cards = mutate_aces_in_initial_hand(players_cards)
+dealers_cards = mutate_aces_in_initial_hand(dealers_cards)
 
 prompt "It's your turn!"
+prompt "Your current total is: #{calc_total(players_cards)}"
 
 loop do
   prompt "Enter hit or stay"
   choice = gets.chomp
   break if choice == "stay" || busted?(players_cards)
   deal_card!(players_cards, deck)
-  prompt "Your hand's current total is: #{calc_total(players_cards)}"
-  # prompt "#{extract_values_no_ace_case(players_cards).inject {|sum, x| sum + x}} "
+  delt_card_suit = card_suit(players_cards, (players_cards.size - 1))
+  delt_card_val_key = card_value_key(players_cards, (players_cards.size - 1))
+  prompt "You received the:"
+  list "#{delt_card_val_key} of #{delt_card_suit}"
+
+  if players_cards.last.values[0].keys[0] == "Ace"
+    players_cards = mutate_added_ace(players_cards)
+  end
+
+  prompt "Your hand's new current total is: #{calc_total(players_cards)}."
+  break if busted?(players_cards)
 end
 
-p players_cards
-
 if busted?(players_cards)
-  prompt "You've been busted! Your hand's total is: #{calc_total(players_cards)}"
-  # prompt "#{extract_values_no_ace_case(players_cards).inject {|sum, x| sum + x}} "
+  prompt "You've been busted! The dealer won."
+else
+  prompt "It's the dealer's turn."
+end
+
+while busted?(players_cards) != true
+  break if calc_total(dealers_cards) >= 17
+  deal_card!(dealers_cards, deck)
+
+  if dealers_cards.last.values[0].keys[0] == "Ace"
+    dealers_cards = mutate_added_ace(dealers_cards)
+  end
+end
+
+prompt "The Dealer busted. You won!" if busted?(dealers_cards)
+
+if busted?(players_cards) != true && busted?(dealers_cards) != true
+  prompt "The final score is:"
+  list "You: #{calc_total(players_cards)}"
+  list "Dealer: #{calc_total(dealers_cards)}"
+  declare_winner_if_no_busts(players_cards, dealers_cards)
 end
