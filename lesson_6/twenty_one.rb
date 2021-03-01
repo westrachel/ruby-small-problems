@@ -110,10 +110,10 @@ def busted?(hand)
   true if calc_total(hand) > 21
 end
 
-# the following method will not declare the correct winner if someone has busted
-# for example, if player's card total == 22 and dealer's card total == 18
-# then the following method would state that the player won
-# b/c 21 - 22 = -1, which is less than 21 - 18
+# The following method will not declare the correct winner if someone
+# has not busted. For example, if player's card total == 22 and the
+# dealer's card total == 18, then the following method would state
+# that the player won b/c 21 - 22 = -1, which is less than 21 - 18
 def declare_winner_if_no_busts(plyr_hand, dealer_hand)
   if (21 - calc_total(plyr_hand)) == (21 - calc_total(dealer_hand))
     prompt "It's a tie!"
