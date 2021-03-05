@@ -18,6 +18,10 @@ require 'pry'
 #    as soon as someone reaches 5 wins. Regardless of whether
 #    someone reaches 5 wins or not, display the larger game
 #    scoreboard.
+# iv. Whatever-one bonus feature.
+#     Store the game winning amount and amount the dealer needs to
+#      reach at a minimum to stop hitting.
+#
 def prompt(msg)
   puts "=> #{msg}"
 end
@@ -33,6 +37,9 @@ end
 SUITS = %w(Hearts Clubs Spades Diamonds)
 POSSIBLE_CARDS = ['2', '3', '4', '5', '6', '7', '8', '9',
                   '10', 'Jack', 'Queen', 'King', 'Ace']
+
+WIN_STD = 31
+DEALER_MINIMUM = 27
 
 def card_val(hand, card_idx)
   hand[card_idx].values[0]
@@ -52,6 +59,8 @@ end
 # w/in if statement, set condition for case where card value == "Ace"
 # first, b/c 'ace'.to_i = 0, like the jack/queen/king cases, but don't
 # want to add 10 to the hand's total when there is an ace
+# depending on WIN_STD, player may be able to have both initial aces
+# delt be worth 11 (if they do get 2 aces in the initial deal)
 def initial_deal_total(hand)
   sum = 0
   hand[0, 2].each do |card_hash|
@@ -64,31 +73,44 @@ def initial_deal_total(hand)
            end
   end
   num_aces = num_of_aces(hand)
-  sum -= 10 if num_aces > 1
+  if num_aces > 1 && sum > WIN_STD
+    sum -= 10
+  end
   sum
 end
 
+# ignoring single rubocop offense that states line assignment branch
+# condition size is too high
 def total(hand)
   sum = initial_deal_total(hand)
   last_idx = hand.size - 1
-  hand[2, last_idx].each do |card_hash|
-    sum += if card_hash.values[0] == "Ace" && sum <= 10
+  hand[2, last_idx].each do |card_hsh|
+    sum += if card_hsh.values[0] == "Ace" && sum <= (WIN_STD - 11)
              11
-           elsif card_hash.values[0] == "Ace"
+           elsif card_hsh.values[0] == "Ace"
              1
-           elsif card_hash.values[0].to_i == 0
+           elsif card_hsh.values[0].to_i == 0
              10
            else
-             card_hash.values[0].to_i
+             card_hsh.values[0].to_i
            end
   end
   sum
 end
 
 # The return value of below busted? method is nil if the
-# total hand value of that player's hand is <= 21
+# total hand value of that player's hand is <= WIN_AMOUNT
 def busted?(hand_total)
-  true if hand_total > 21
+  true if hand_total > WIN_STD
+end
+
+def final_cds_msg(participant)
+  case participant
+  when "player"
+    prompt "Your final cards were:"
+  when "dealer"
+    prompt "The Dealer's final cards were:"
+  end
 end
 
 def display_cards(hand)
@@ -109,12 +131,12 @@ end
 # then the following method would state that the player won
 # b/c 21 - 22 = -1, which is less than 21 - 18
 def declare_winner_if_no_busts(players_total, dealers_total)
-  if (21 - players_total) == (21 - dealers_total)
-    prompt "It's a tie!"
-  elsif (21 - players_total) < (21 - dealers_total)
-    prompt "You won!"
+  if (WIN_STD - players_total) == (WIN_STD - dealers_total)
+    prompt "It was a tie!"
+  elsif (WIN_STD - players_total) < (WIN_STD - dealers_total)
+    p "=> You won!"
   else
-    prompt "The Dealer won!"
+    p "=> The Dealer won!"
   end
 end
 
@@ -173,7 +195,7 @@ loop do # start of outer full game loop
 
   # print welcome messages and starting hands of the different players
   # the player will only see the dealer's first card
-  prompt "Welcome to the game of 21! The initial cards have been delt."
+  prompt "Welcome to the game of #{WIN_STD}! The initial cards have been delt."
   prompt "The Dealer has:"
   list "#{card_val(dealer_hand, 0)} of #{card_suit(dealer_hand, 0)}"
   list "Unknown card"
@@ -186,7 +208,7 @@ loop do # start of outer full game loop
   prompt "It's your turn!"
 
   loop do
-    prompt "Enter stay to stay, otherwise hit"
+    prompt "Enter stay to stay, otherwise hit to try to get #{WIN_STD}"
     choice = gets.chomp
     # impossible to bust in initial hand, so only initially
     # break if user entered stay
@@ -203,10 +225,13 @@ loop do # start of outer full game loop
   if busted?(player_total)
     prompt "You've been busted!"
     new_line
-    prompt "Your final cards were:"
+    final_cds_msg("player")
     display_cards(plyr_hand)
-    prompt "The Dealer's final cards were:"
+
+    new_line
+    final_cds_msg("dealer")
     display_cards(dealer_hand)
+
     new_line
     scoreboard(player_total, dealer_total)
     prompt "The Dealer won!"
@@ -218,11 +243,11 @@ loop do # start of outer full game loop
 
   dealer_hit_tally = 0
   while busted?(player_total) != true
-    break if dealer_total >= 17
+    break if dealer_total >= DEALER_MINIMUM
     dealer_hand.push(deck.pop)
     dealer_total = total(dealer_hand)
     dealer_hit_tally += 1
-    break if dealer_total >= 17
+    break if dealer_total >= DEALER_MINIMUM
   end
 
   new_line
@@ -237,10 +262,13 @@ loop do # start of outer full game loop
   if busted?(dealer_total)
     prompt "The Dealer busted!"
     new_line
-    prompt "Your final cards were:"
+    final_cds_msg("player")
     display_cards(plyr_hand)
-    prompt "The Dealer's final cards were:"
+
+    new_line
+    final_cds_msg("dealer")
     display_cards(dealer_hand)
+
     new_line
     scoreboard(player_total, dealer_total)
     prompt "You won!"
@@ -248,20 +276,27 @@ loop do # start of outer full game loop
   end
 
   if busted?(player_total) != true && busted?(dealer_total) != true
-    prompt "Your final cards were:"
+    final_cds_msg("player")
     display_cards(plyr_hand)
-    prompt "The Dealer's final cards were:"
+    new_line
+
+    final_cds_msg("dealer")
     display_cards(dealer_hand)
     new_line
+
     scoreboard(player_total, dealer_total)
-    # declare_winner_if_no_busts(player_total, dealer_total)
+    new_line
     case declare_winner_if_no_busts(player_total, dealer_total)
-    when "The Dealer won!"
+    when "=> The Dealer won!"
       dealer_wins += 1
-    when "You won!"
+    when "=> You won!"
       player_wins += 1
     end
   end
+
+  new_line
+  prompt "The total #{WIN_STD} Game score is:"
+  prompt "You: #{player_wins} vs Dealer: #{dealer_wins}"
 
   break if player_wins == 5 || dealer_wins == 5
 
@@ -272,7 +307,7 @@ loop do # start of outer full game loop
 end # end of outer full game loop
 
 prompt "Final Score:"
-list "You won the Twenty-One Game #{player_wins} time(s)"
+list "You won the #{WIN_STD} Game #{player_wins} time(s)"
 list "The Dealer won #{dealer_wins} time(s)"
 declare_lger_game_winner(player_wins, dealer_wins)
 prompt "Thanks for playing! Goodbye now."
