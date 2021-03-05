@@ -20,7 +20,11 @@ require 'pry'
 #    scoreboard.
 # iv. Whatever-one bonus feature.
 #     Store the game winning amount and amount the dealer needs to
-#      reach at a minimum to stop hitting.
+#      reach at a minimum to stop hitting as constants, so that they
+#      are adjustable and could turn the game into 21, or 31, or
+#      whatever-one. Make any other adjustments as necessary to have
+#      game messages + busts + declare_winner methods reactive to
+#      these constants.
 #
 def prompt(msg)
   puts "=> #{msg}"
