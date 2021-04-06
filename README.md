@@ -1,4 +1,4 @@
-#README #
+# README #
 
 
-#This repo contains the RB101 exercises 
+#This repo contains a portion of RB101 practice problems.
