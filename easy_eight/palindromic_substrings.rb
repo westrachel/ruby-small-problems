@@ -78,3 +78,21 @@ p palindromes('hello-madam-did-madam-goodbye') == [
 p palindromes('knitting cassettes') == [
   'nittin', 'itti', 'tt', 'ss', 'settes', 'ette', 'tt']
 # => true
+
+# Further Exploration:
+# modify the methods so that case sensitivity is ignored and non-alphanumeric characters
+# alphanumeric characters are alphabetic characters (upper and lowercase) digits
+
+def scrub_str(substr)
+  substr.gsub(/[^0-9a-z ]/i, '').downcase
+end
+
+def alphanum_palindromes(str)
+  substrs(str).select do |substr|
+    scrub_str(substr).reverse == scrub_str(substr) && substr.length > 1
+  end
+end
+
+# check work:
+p alphanum_palindromes('MadAm') == ['MadAm', 'adA']
+# => true
