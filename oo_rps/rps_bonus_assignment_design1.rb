@@ -19,8 +19,27 @@
 #                   > key that references the player's name
 #                   > each value references the player's move during the round
 
+# 3. Add Lizard and Spock moves to the game:
+#   > Rock beats lizard & scissors
+#   > Lizard beats spock & paper
+#   > Spock beats scissors & rock
+#   > Scissors beats lizard & paper 
+#   > Paper beats rock and spock
+
 class Move
-  VALUES = ['rock', 'paper', 'scissors']
+  VALUES = ['rock', 'paper', 'scissors', 'spock', 'lizard']
+  
+  WINNING_SCENARIOS = { 'scissors' => %w(paper lizard),
+                        'paper' => %w(rock spock),
+                        'rock' => %w(lizard scissors),
+                        'spock' => %w(rock scissors),
+                        'lizard' => %w(spock paper)}
+
+   LOSING_SCENARIOS = { 'scissors' => %w(rock spock),
+                        'paper' => %w(lizard scissors) ,
+                        'rock' => %w(paper spock) ,
+                        'spock' => %w(paper lizard) ,
+                        'lizard' => %w(rock scissors) }
 
   attr_reader :value
 
@@ -39,17 +58,21 @@ class Move
   def paper?
     @value == 'paper'
   end
+  
+  def spock?
+    @value = 'spock'
+  end
+  
+  def lizard?
+    @value = 'lizard'
+  end
 
   def >(other_move)
-    (rock? && other_move.scissors?) ||
-      (paper? && other_move.rock?) ||
-      (scissors? && other_move.paper?)
+    WINNING_SCENARIOS[value].include?(other_move.value)
   end
 
   def <(other_move)
-    (rock? && other_move.paper?) ||
-      (paper? && other_move.scissors?) ||
-      (scissors? && other_move.rock?)
+    LOSING_SCENARIOS[value].include?(other_move.value)
   end
 
   def to_s
@@ -81,7 +104,7 @@ class Human < Player
   def choose
     choice = nil
     loop do
-      puts "Please choose rock, paper, or scissors:"
+      puts "Please choose rock, paper, scissors, lizard, or spock:"
       choice = gets.chomp
       break if Move::VALUES.include? choice
       puts "Sorry, invalid choice."
@@ -111,10 +134,18 @@ class RPSGame
   end
 
   def display_welcome_message
-    puts "Welcome to Rock, Paper, Scissors!"
+    puts "Welcome to Rock, Paper, Scissors, Lizard, or Spock!"
   end
 
   def display_goodbye_message
+    puts "The Rock, Paper, Scissors, Lizard, Spock winner is:"
+    if human.win_count > computer.win_count
+      puts " #{human.name}"
+    elsif computer.win_count > human.win_count
+      puts " #{computer.name}"
+    else
+      puts ""
+    end
     puts "Thanks for playing! Good bye!"
   end
 
@@ -128,8 +159,8 @@ class RPSGame
   end
 
   def display_moves
-    puts "#{human.name} chose #{human.move}."
-    puts "#{computer.name} chose #{computer.move}."
+    puts " > #{human.name} chose #{human.move}."
+    puts " > #{computer.name} chose #{computer.move}."
   end
 
   def display_entire_move_history
