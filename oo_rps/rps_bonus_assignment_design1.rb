@@ -23,23 +23,29 @@
 #   > Rock beats lizard & scissors
 #   > Lizard beats spock & paper
 #   > Spock beats scissors & rock
-#   > Scissors beats lizard & paper 
+#   > Scissors beats lizard & paper
 #   > Paper beats rock and spock
+
+# 4. Build in personalities for the different computer players
+#   > R2D2: only plays rock
+#   > Hal: is very likely to choose scissors, sometimes rock, and never paper
+#   > Choop: only picks among living creatures: lizard or spock
+#   > Yogi: leaves the game to equal chance and selects randomly from the moves
 
 class Move
   VALUES = ['rock', 'paper', 'scissors', 'spock', 'lizard']
-  
+
   WINNING_SCENARIOS = { 'scissors' => %w(paper lizard),
                         'paper' => %w(rock spock),
                         'rock' => %w(lizard scissors),
                         'spock' => %w(rock scissors),
-                        'lizard' => %w(spock paper)}
+                        'lizard' => %w(spock paper) }
 
-   LOSING_SCENARIOS = { 'scissors' => %w(rock spock),
-                        'paper' => %w(lizard scissors) ,
-                        'rock' => %w(paper spock) ,
-                        'spock' => %w(paper lizard) ,
-                        'lizard' => %w(rock scissors) }
+  LOSING_SCENARIOS = { 'scissors' => %w(rock spock),
+                       'paper' => %w(lizard scissors),
+                       'rock' => %w(paper spock),
+                       'spock' => %w(paper lizard),
+                       'lizard' => %w(rock scissors) }
 
   attr_reader :value
 
@@ -58,11 +64,11 @@ class Move
   def paper?
     @value == 'paper'
   end
-  
+
   def spock?
     @value = 'spock'
   end
-  
+
   def lizard?
     @value = 'lizard'
   end
@@ -115,11 +121,16 @@ end
 
 class Computer < Player
   def set_name
-    self.name = ['R2D2', 'Hal', 'Choop', 'Yogi', 'STL'].sample
+    self.name = ['R2D2', 'Hal', 'Choop', 'Yogi'].sample
   end
 
   def choose
-    self.move = Move.new(Move::VALUES.sample)
+    self.move = case name
+                when 'R2D2' then Move.new('rock')
+                when 'Hal'  then Move.new((%w(scissors scissors scissors scissors rock).sample))
+                when 'Choop' then Move.new((%w(lizard spock).sample))
+                else              Move.new(Move::VALUES.sample)
+                end
   end
 end
 
