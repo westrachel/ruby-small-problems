@@ -6,14 +6,10 @@ class Participant
 
   def initialize
     @hand = []
-    @name = ""
   end
 
   def hit(cards)
     hand << cards
-  end
-
-  def stay
   end
 
   def busted?
@@ -79,14 +75,14 @@ class Game
     @dealer = Dealer.new
   end
 
-  def start
+  def play
     display_welcome_message
     player_selects_name
     deal_cards
     display_initial_cards
     player_moves
-    #dealer_moves
-    #display_result
+    dealer_moves if player.busted?.nil?
+    display_result
   end
 
   def display_welcome_message
@@ -121,7 +117,6 @@ class Game
       puts "Do you want to hit or stay? Enter n to stay otherwise hit."
       choice = gets.chomp.downcase
       choice == "n" ? break : player.hit(deck.deal)
-      binding.pry
       display_card_dealt(player)
       break if player.busted?
     end
@@ -134,8 +129,37 @@ class Game
   end
 
   def dealer_moves
+    loop do
+      break if dealer.total >= 17
+      dealer.hit(deck.deal)
+    end
+  end
+
+  def abs_value(num)
+    num < 0 ? num * -1 : num
+  end
+
+  def winner
+    if abs_value(21 - player.total) < abs_value(21 - dealer.total)
+      player.name
+    elsif abs_value(21 - player.total) > abs_value(21 - dealer.total)
+      "Dealer"
+    end
+  end
+
+  def display_result
+    if player.busted?
+      puts "You busted. The Dealer won!"
+    elsif dealer.busted?
+      puts "The Dealer busted. You won!"
+    else
+      case winner
+      when nil then puts "It's a tie! You & the Dealer both have #{player.total}"
+      else puts "#{winner} won! The final score is: #{player.name}: #{player.total} to Dealer: #{dealer.total}"
+      end
+    end
   end
   
 end
 
-Game.new.start
+Game.new.play
