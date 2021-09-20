@@ -1,5 +1,5 @@
 # Problem: Build out the Twenty-One Game as an Object Oriented Program:
-require 'pry'
+# require 'pry'
 
 class Participant
   attr_accessor :hand, :name
@@ -13,21 +13,28 @@ class Participant
   end
 
   def busted?
-    true if self.total > 21
+    true if total > 21
+  end
+
+  def convert(raw_card_value, current_hand_sum)
+    if raw_card_value.is_a?(Integer)
+      raw_card_value
+    elsif raw_card_value == "ace" && (current_hand_sum + 11 <= 21)
+      11
+    elsif raw_card_value == "ace"
+      1
+    else # raw card must be jack/queen/king
+      10
+    end
   end
 
   def total
-    values = self.hand.map { |card| card.value }
     sum = 0
-    values.each do |value|
-      sum += value if value.is_a?(Integer)
-      sum += 10 if %w(jack queen king).include?(value)
-      sum += 11 if value == "ace" && (sum + 11 <= 21)
-      sum += 1 if value == "ace" && (sum + 11 > 21)
+    hand.map(&:value).each do |raw_card_value|
+      sum += convert(raw_card_value, sum)
     end
     sum
   end
-
 end
 
 class Player < Participant
@@ -50,13 +57,16 @@ class Deck
 
   def deal
     card = @deck.sample
-    @deck.delete_if { |orig_card| orig_card.suit == card.suit && orig_card.value == card.value }
+    @deck.delete_if do |original_card|
+      original_card.suit == card.suit && original_card.value == card.value
+    end
     card
   end
 end
 
 class Card
   attr_reader :suit, :value
+
   SUITS = %w(hearts diamonds clubs spades)
   VALUES = [2, 3, 4, 5, 6, 7, 8, 9, 10, "jack", "queen", "king", "ace"]
 
@@ -83,11 +93,16 @@ class Game
     player_moves
     dealer_moves if player.busted?.nil?
     display_result
+    display_goodbye_message
   end
 
   def display_welcome_message
     puts "Welcome to Twenty-One!"
     puts ""
+  end
+
+  def display_goodbye_message
+    puts "Thanks for playing! Goodbye"
   end
 
   def player_selects_name
@@ -102,13 +117,18 @@ class Game
     end
   end
 
+  def display_card(num, participant)
+    card = participant.hand[num]
+    "#{card.value} of #{card.suit}"
+  end
+
   def display_initial_cards
     puts "#{player.name}, you've been dealt the:"
-    puts " => #{player.hand[0].value} of #{player.hand[0].suit} and"
-    puts " => #{player.hand[1].value} of #{player.hand[1].suit}"
+    puts " => #{display_card(0, player)}"
+    puts " => #{display_card(1, player)}"
     puts ""
     puts "The dealer has:"
-    puts " => #{dealer.hand[0].value} of #{dealer.hand[0].suit} and"
+    puts " => #{display_card(0, dealer)}"
     puts " => unknown card"
   end
 
@@ -116,6 +136,7 @@ class Game
     loop do
       puts "Do you want to hit or stay? Enter n to stay otherwise hit."
       choice = gets.chomp.downcase
+      puts ""
       choice == "n" ? break : player.hit(deck.deal)
       display_card_dealt(player)
       break if player.busted?
@@ -123,9 +144,10 @@ class Game
   end
 
   def display_card_dealt(participant)
-    last_card_idx = participant.hand.size - 1
+    last_card = participant.hand[participant.hand.size - 1]
     puts "You received the:"
-    puts " => #{participant.hand[last_card_idx].value} of #{participant.hand[last_card_idx].suit}"
+    puts " => #{last_card.value} of #{last_card.suit}"
+    puts ""
   end
 
   def dealer_moves
@@ -140,26 +162,48 @@ class Game
   end
 
   def winner
-    if abs_value(21 - player.total) < abs_value(21 - dealer.total)
-      player.name
-    elsif abs_value(21 - player.total) > abs_value(21 - dealer.total)
+    plyr_abs_diff_to_goal = abs_value(21 - player.total)
+    dealer_abs_diff_to_goal = abs_value(21 - dealer.total)
+    if winner_bc_of_bust.nil? == false
+      winner_bc_of_bust
+    elsif plyr_abs_diff_to_goal > dealer_abs_diff_to_goal
       "Dealer"
+    elsif plyr_abs_diff_to_goal < dealer_abs_diff_to_goal
+      player.name
+    end
+  end
+
+  def winner_bc_of_bust
+    winner = nil
+    [player, dealer].each do |contender|
+      if contender.busted?
+        winner = (contender == dealer ? player.name : "The Dealer")
+      end
+    end
+    winner
+  end
+
+  def final_score_msg
+    scores = "#{player.name}: #{player.total} vs Dealer: #{dealer.total}"
+    puts "The final score is: #{scores}"
+  end
+
+  def bust_message
+    case winner_bc_of_bust
+    when "The Dealer"
+      puts "You busted!"
+    when player.name
+      puts "The Dealer busted!"
     end
   end
 
   def display_result
-    if player.busted?
-      puts "You busted. The Dealer won!"
-    elsif dealer.busted?
-      puts "The Dealer busted. You won!"
-    else
-      case winner
-      when nil then puts "It's a tie! You & the Dealer both have #{player.total}"
-      else puts "#{winner} won! The final score is: #{player.name}: #{player.total} to Dealer: #{dealer.total}"
-      end
+    case winner
+    when nil then puts "It's a tie!"
+    else puts "#{winner} won!"
     end
+    winner_bc_of_bust.nil? ? final_score_msg : bust_message
   end
-  
 end
 
 Game.new.play
