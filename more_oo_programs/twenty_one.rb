@@ -38,6 +38,16 @@ class Participant
 end
 
 class Player < Participant
+  def select_name
+    puts "What is your name?"
+    loop do
+      self.name = gets.chomp
+      puts "Enter y(es) to confirm #{name} is your desired name"
+      ans = gets.chomp
+      break if ans.downcase == 'y'
+      puts "Enter your desired name:"
+    end
+  end
 end
 
 class Dealer < Participant
@@ -87,7 +97,7 @@ class Game
 
   def play
     display_welcome_message
-    player_selects_name
+    player.select_name
     deal_cards
     display_initial_cards
     player_moves
@@ -103,11 +113,6 @@ class Game
 
   def display_goodbye_message
     puts "Thanks for playing! Goodbye"
-  end
-
-  def player_selects_name
-    puts "What is your name?"
-    player.name = gets.chomp
   end
 
   def deal_cards
@@ -127,7 +132,7 @@ class Game
     puts " => #{display_card(0, player)}"
     puts " => #{display_card(1, player)}"
     puts ""
-    puts "The dealer has:"
+    puts "The Dealer has:"
     puts " => #{display_card(0, dealer)}"
     puts " => unknown card"
   end
@@ -154,6 +159,7 @@ class Game
     loop do
       break if dealer.total >= 17
       dealer.hit(deck.deal)
+      puts "The Dealer hit!"
     end
   end
 
