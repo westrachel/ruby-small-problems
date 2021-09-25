@@ -100,19 +100,20 @@
 def minilang(str)
   register = 0
   stack = []
-  arr = str.split(' ').map do |x|
+  parsed_command = str.split(' ').map do |x|
     x.to_i.to_s == x ? x.to_i : x
   end
-  arr.each do |comand|
-    register = comand if comand.is_a?(Integer)
-    stack << register if comand == 'PUSH'
-    register += stack.pop if comand == 'ADD'
-    register -= stack.pop if comand == 'SUB'
-    register *= stack.pop if comand == 'MULT'
-    register /= stack.pop if comand == 'DIV'
-    register %= stack.pop if comand == 'MOD'
-    register = stack.pop if comand == 'POP'
-    puts register if comand == 'PRINT'
+  parsed_command.each do |subcommand|
+    register = subcommand if subcommand.is_a?(Integer)
+    case subcommand
+    when 'PUSH' then stack << register
+    when 'ADD' then register += stack.pop
+    when 'SUB' then register -= stack.pop
+    when 'MULT' then register *= stack.pop
+    when 'DIV' then register /= stack.pop
+    when 'MOD' then register %= stack.pop
+    when 'POP' then register = stack.pop
+    when 'PRINT' then puts register
   end
 end
 
@@ -147,8 +148,3 @@ minilang('-3 PUSH 5 SUB PRINT')
 # 8
 
 minilang('6 PUSH')
-
-# Note to self:
-# Can refactor minilang method above to not specify comand == as many times
-#    as is done above; use case statement with when ... then ... and specify
-#    an else statment at the end to capture the cases where 'comand' is an integer
