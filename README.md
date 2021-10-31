@@ -2,7 +2,8 @@
 
 Exercises + Application Assignments from Ruby Object Oriented Programming course 120
 
-Core Concepts of 120: 
+<pre>
+Core Concepts of 120:
 i. Classes as blueprints for behaviors and attributes of objects
 ii. Instance Variables vs Class Variables
 iii. Scoping rules for class variables, instance variables, and constants
@@ -43,3 +44,4 @@ xv. Self
       - Prepended to a method definition to signify that method is a class method definition
       - When referred to inside a class, but outside an instance method, refers to the class itself
 xvi. Other operators vs fake operators (actual methods)
+</pre>
