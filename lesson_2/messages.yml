@@ -1,0 +1,23 @@
+english:
+  welcome: "Welcome to the Calculator App!"
+  name: "Please enter your name."
+  first_num: "Enter the first number"
+  second_num: "Enter the second number"
+  invalid_num: "That doesn't seem like a valid number..."
+  goodbye: "Thanks for using this app! Goodbye."
+  operation_prompt: "What operation do you want to perform? 1) add 2) subtract 3) multiply 4) divide"
+  enforce_choice: "Must choose 1, 2, 3, 4"
+  result: "The result is"
+  exit: "Do you want to perform another calculation? (Y to calculate)"
+
+french:
+  welcome: "Bienvenue dans l'application calculatrice!"
+  name: "S'il vous plaît entrez votre nom"
+  first_num: "Entrez le premier chiffre"
+  second_num: "Entrez le deuxième chiffre"
+  invalid_num: "Ce n'est pas un numéro valide..."
+  goodbye: "Merci d'utiliser cette application. Au revoir!"
+  operation_prompt: "Quelle opération souhaitez-vous effectuer? 1) ajouter 2) soustraire 3) multiplier 4) diviser"
+  enforce_choice: "Tu dois choisir"
+  result: "Le résultat est"
+  exit: "Voulez-vous effectuer un autre calcul? (Y pour calculer)"
