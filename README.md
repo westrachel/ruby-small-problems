@@ -1,4 +1,3 @@
 # README #
 
-
-#This repo contains a portion of RB101 practice problems.
+Problems I solved to enhance my ruby skills.
